@@ -12,6 +12,8 @@
 
 
 static constexpr int INVALID_SOCKET = -1;
+struct Unit{};
+static constexpr auto Success = Unit{};
 
 class Socket final {
     int fd_ { INVALID_SOCKET };
@@ -27,10 +29,10 @@ public:
 
     bool destroy() noexcept;
     [[nodiscard]] int fd() const noexcept { return fd_; }
-    [[nodiscard]] bool connect(std::string const& address, int port) const noexcept;
-    [[nodiscard]] bool bind(int port) const noexcept;
-    [[nodiscard]] bool listen(int backlog = SOMAXCONN) const noexcept;
-    [[nodiscard]] int accept() const noexcept;
+    [[nodiscard]] std::expected<Unit,std::errc> connect(std::string const& address, int port) const noexcept;
+    [[nodiscard]] std::expected<Unit,std::errc> bind(int port) const noexcept;
+    [[nodiscard]] std::expected<Unit,std::errc> listen(int backlog = SOMAXCONN) const noexcept;
+    [[nodiscard]] std::expected<int,std::errc> accept() const noexcept;
     [[nodiscard]] std::string hostAddress() const noexcept;
     [[nodiscard]] std::string peerAddress() const noexcept;
 

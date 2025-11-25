@@ -29,7 +29,7 @@ bool Socket::destroy() noexcept {
     return {};
 }
 
-bool Socket::connect(std::string const& address, int const port) const noexcept {
+std::expected<Unit,std::errc> Socket::connect(std::string const& address, int const port) const noexcept {
     if (auto const host = gethostbyname(address.c_str())) {
         sockaddr_in dest{
             .sin_family = AF_INET,
@@ -37,13 +37,12 @@ bool Socket::connect(std::string const& address, int const port) const noexcept 
             .sin_addr {.s_addr = *reinterpret_cast<unsigned *>(host->h_addr_list[0])}
         };
         if (::connect(fd_, reinterpret_cast<sockaddr *>(&dest), sizeof(dest)) == 0)
-            return true;
+            return Success;
     }
-    print_error(errno);
-    return {};
+    return std::unexpected(std::errc{errno});
 }
 
-bool Socket::bind(int port) const noexcept {
+std::expected<Unit, std::errc> Socket::bind(int port) const noexcept {
     sockaddr_in const destination {
         .sin_family = AF_INET,
         .sin_port = htons(port),
@@ -52,26 +51,23 @@ bool Socket::bind(int port) const noexcept {
     auto const addr = reinterpret_cast<struct sockaddr const*>(&destination);
 
     if (::bind(fd_, addr, sizeof(destination)) == 0)
-        return true;
+        return Success;
 
-    print_error(errno);
-    return {};
+    return std::unexpected(std::errc{errno});
 }
 
-bool Socket::listen(int const backlog) const noexcept {
+std::expected<Unit,std::errc> Socket::listen(int const backlog) const noexcept {
     if (::listen(fd_, backlog) == 0)
-        return true;
+        return Success;
 
-    print_error(errno);
-    return {};
+    return std::unexpected(std::errc{errno});
 }
 
-int Socket::accept() const noexcept {
+std::expected<int,std::errc> Socket::accept() const noexcept {
     if (auto const fd = ::accept(fd_, nullptr, nullptr); fd != INVALID_SOCKET)
         return fd;
 
-    print_error(errno);
-    return INVALID_SOCKET;
+    return std::unexpected(std::errc{errno});
 }
 
 std::string Socket::hostAddress() const noexcept {
