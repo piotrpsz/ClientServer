@@ -134,7 +134,7 @@ std::expected<size_t, std::errc> Socket::readBytes(void* const buffer, size_t co
     auto ptr = static_cast<char*>(buffer);
 
     while (nleft > 0) {
-        auto nread = ::read(fd_, ptr, nleft);
+        auto nread = read(fd_, ptr, nleft);
         if (nread < 0) {
             if (errno == EINTR) {
                 nread = 0;
@@ -153,12 +153,18 @@ std::expected<size_t, std::errc> Socket::readBytes(void* const buffer, size_t co
 
 std::expected<std::vector<char>,std::errc> Socket::readPackage() const noexcept {
     size_t nbytes{};
-    if (auto retv = readBytes(&nbytes, sizeof(nbytes)); !retv)
+    auto retv = readBytes(&nbytes, sizeof(nbytes));
+    if (not retv)
         return std::unexpected(retv.error());
+    if (retv.value() == 0)
+        return std::unexpected(std::errc::broken_pipe);
 
     std::vector<char> bytes(nbytes);
-    if (auto retv = readBytes(bytes.data(), nbytes); !retv)
+    retv = readBytes(bytes.data(), nbytes);
+    if (not retv)
         return std::unexpected(retv.error());
+    if (retv.value() == 0)
+        return std::unexpected(std::errc::broken_pipe);
 
     return bytes;
 }
