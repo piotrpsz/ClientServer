@@ -115,7 +115,7 @@ std::expected<size_t, std::errc> Socket::writeBytes(void const* const buffer, si
     return size - nleft;
 }
 
-std::expected<size_t, std::errc> Socket::writePackage(std::span<char> const bytes) const noexcept {
+std::expected<size_t, std::errc> Socket::writePackage(std::span<unsigned char> const bytes) const noexcept {
     size_t const size = bytes.size();
     if (auto const retv = writeBytes(&size, sizeof(size)); !retv)
         return retv;
@@ -151,7 +151,7 @@ std::expected<size_t, std::errc> Socket::readBytes(void* const buffer, size_t co
     return size - nleft;
 }
 
-std::expected<std::vector<char>,std::errc> Socket::readPackage() const noexcept {
+std::expected<std::vector<unsigned char>,std::errc> Socket::readPackage() const noexcept {
     size_t nbytes{};
     auto retv = readBytes(&nbytes, sizeof(nbytes));
     if (not retv)
@@ -159,7 +159,7 @@ std::expected<std::vector<char>,std::errc> Socket::readPackage() const noexcept 
     if (retv.value() == 0)
         return std::unexpected(std::errc::broken_pipe);
 
-    std::vector<char> bytes(nbytes);
+    std::vector<unsigned char> bytes(nbytes);
     retv = readBytes(bytes.data(), nbytes);
     if (not retv)
         return std::unexpected(retv.error());

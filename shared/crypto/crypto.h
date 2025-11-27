@@ -42,11 +42,13 @@
 #include <botan/pubkey.h>
 #include <botan/base64.h>
 #include <botan/x509_key.h>
+#include <ranges>
 
 namespace bee::crypto {
     extern Botan::System_RNG rng;
 
     using u8 = uint8_t;
+    using i8 = int8_t;
     using String = std::string;
     using StringView = std::string_view;
     template<typename T, typename K> using Pair = std::pair<T, K>;
@@ -64,9 +66,18 @@ namespace bee::crypto {
 
     template<typename Out>
     Out As(auto const& data) {
+        // namespace rv = std::ranges::views;
+        // auto out = data
+        //     | rv::transform([] (auto const c) { return static_cast<u8>(c); })
+        //     | std::ranges::to<Out>();
+
+        // Out out;
+        // out.reserve(data.size());
+        // std::copy_n(data.begin(), data.size(), std::back_inserter(out));
+
         Out out;
-        out.reserve(data.size());
-        std::copy_n(data.begin(), data.size(), std::back_inserter(out));
+        out.resize(data.size());
+        memcpy(out.data(), data.data(), data.size());
         return out;
     }
 
@@ -137,7 +148,7 @@ namespace bee::crypto {
         /// Szyfrowanie.
         /// Szyfrujemy kluczem publicznym partnera,
         /// on odszyfruje to swoim kluczem prywatnym.
-        [[nodiscard]] Vector<u8> encryptRSA(Span<const u8> const data) const {
+        [[nodiscard]] Vector<u8> encryptRSA(Span<u8> const data) const {
             return Botan::PK_Encryptor_EME(*rsa_buddy_public_key_, rng, RSA_ALGO).encrypt(data, rng);
         }
 

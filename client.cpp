@@ -11,8 +11,9 @@
 #include "shared/socket/socket.h"
 
 using namespace std::string_literals;
+using namespace bee::crypto;
 
-std::vector<char> bytes(std::string_view const text) {
+std::vector<unsigned char> bytes(std::string_view const text) {
     return {text.begin(), text.end()};
 }
 
@@ -40,18 +41,19 @@ int main() {
     std::println("Connected to server ({})", client.peerAddress());
 
     for (auto const& line : data) {
-        if (auto const retv = client.writeText(line); !retv) {
+        auto item = bytes(line);
+        if (auto const retv = client.write(item); !retv) {
             print_error(retv.error());
             return EXIT_FAILURE;
         }
         std::println("Sent package: {}", line);
 
-        auto const answer = client.readText();
+        auto const answer = client.read();
         if (!answer) {
             print_error(answer.error());
             return EXIT_FAILURE;
         }
-        std::println("Received answer: {}", answer.value());
+        std::println("Received answer: {}", As<String>(answer.value()));
     }
 
     return EXIT_SUCCESS;

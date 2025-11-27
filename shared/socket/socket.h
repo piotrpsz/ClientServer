@@ -38,14 +38,14 @@ public:
     [[nodiscard]] std::string peerAddress() const noexcept;
 
     std::expected<size_t, std::errc> writeBytes(void const* buffer, size_t size) const noexcept;
-    [[nodiscard]] std::expected<size_t, std::errc> writePackage(std::span<char> bytes) const noexcept;
+    [[nodiscard]] std::expected<size_t, std::errc> writePackage(std::span<unsigned char> bytes) const noexcept;
     [[nodiscard]] std::expected<size_t,std::errc> writeText(std::string_view const text) const noexcept {
-        std::vector<char> vec{text.begin(), text.end()};
+        std::vector<unsigned char> vec{text.begin(), text.end()};
         return writePackage(vec);
     }
 
     std::expected<size_t, std::errc> readBytes(void* buffer, size_t size) const noexcept;
-    [[nodiscard]] std::expected<std::vector<char>,std::errc> readPackage() const noexcept;
+    [[nodiscard]] std::expected<std::vector<unsigned char>,std::errc> readPackage() const noexcept;
     [[nodiscard]] std::expected<std::string,std::errc> readText() const noexcept {
         return readPackage().transform([](auto&& vec) {
             return std::string{vec.begin(), vec.end()};

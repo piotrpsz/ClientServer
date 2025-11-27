@@ -20,6 +20,8 @@ public:
     }
 
     bool init() noexcept;
+    [[nodiscard]] std::expected<size_t, std::errc> write(std::span<unsigned char> bytes) const noexcept;
+    [[nodiscard]] std::expected<std::vector<unsigned char>,std::errc> read() const noexcept;
 };
 
 class Client final : public Socket {
@@ -30,4 +32,6 @@ public:
     ~Client() override = default;
 
     bool init() noexcept;
+    [[nodiscard]] std::expected<size_t, std::errc> write(std::span<unsigned char> bytes) const noexcept;
+    [[nodiscard]] std::expected<std::vector<unsigned char>,std::errc> read() const noexcept;
 };

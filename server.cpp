@@ -8,6 +8,9 @@
 #include <print>
 #include <atomic>
 
+using namespace bee::crypto;
+
+
 std::atomic_bool running{true};
 
 
@@ -19,21 +22,19 @@ void clientHandler(int const fd) {
         return;
     }
 
-    // TODO tutaj wymiana kluczy szyfrujących.
     std::println("Client connected ({})", server.peerAddress());
 
-
-
     while (true) {
-        auto const request = server.readText();
+        auto const request = server.read();
         if (!request) {
             print_error(request.error());
             break;
-         }
-        std::println("-- Received package: {}", request.value());
+        }
+        auto text = As<String>(request.value());
+        std::println("-- Received package: {}", text);
 
-        auto const answer = server.writeText("Witaj: " + request.value() + "!");
-        if (!answer) {
+        auto output = As<Vector<u8>>("Witaj: " + text + "!");
+        if (auto const answer = server.write(output); !answer) {
             print_error(answer.error());
             break;
         }
