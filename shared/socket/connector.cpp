@@ -9,6 +9,9 @@ bool Server::init() noexcept{
 }
 
 bool Client::init() noexcept {
+    // Klient jako pierwszy wysyła swój klucz publiczny w postaci BER.
+    auto const retv = crypto.RSAPublicKeyBER();
+
     return true;
 }
 
