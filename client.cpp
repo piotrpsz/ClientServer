@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "request.h"
+#include "response.h"
 #include "shared/socket/connector.h"
 #include "shared/socket/logger.h"
 #include "shared/socket/socket.h"
@@ -17,6 +18,59 @@ using namespace bee::crypto;
 
 std::vector<unsigned char> bytes(std::string_view const text) {
     return {text.begin(), text.end()};
+}
+
+bool openDatabase(Client const& client, String name) noexcept {
+    auto request = Request {
+        .id = 123,
+        .type = RequestType::Database,
+        .subType = RequestSubType::Open,
+        .content = As<std::vector<u8>>("test.sqlite"s)
+    };
+
+    std::println("Sending request: {}", request);
+    if (auto const retv = client.write_text(request.toJSON()); !retv) {
+        print_error(retv.error());
+        return {};
+    }
+
+    auto const answer = client.read_text();
+    if (!answer) {
+        print_error(answer.error());
+        return {};
+    }
+    auto response = Response::fromJSON(answer.value());
+    if (response) {
+        std::println("Received response: {}", response.value());
+        return response->code == 0;
+    }
+    return {};
+}
+
+bool createDatabase(Client const& client, String name) noexcept {
+    auto request = Request {
+        .id = 123,
+        .type = RequestType::Database,
+        .subType = RequestSubType::Create,
+        .content = As<std::vector<u8>>("test.sqlite"s)
+    };
+
+    std::println("Sending request: {}", request);
+    if (auto const retv = client.write_text(request.toJSON()); !retv) {
+        print_error(retv.error());
+        return {};
+    }
+
+    auto const answer = client.read_text();
+    if (!answer) {
+        print_error(answer.error());
+        return {};
+    }
+    if (auto response = Response::fromJSON(answer.value())) {
+        std::println("Received response: {}", response.value());
+        return response->code == 0;
+    }
+    return {};
 }
 
 int main() {
@@ -44,19 +98,14 @@ int main() {
     std::println("Connected to server ({})", client.peerAddress());
 
     //===============================================================
-    Request const request {
-        .id = 123,
-        .type = RequestType::Database,
-        .subType = RequestSubType::CreateOrOpen,
-        .content = As<std::vector<u8>>("test.sqlite"s)
-    };
-
-    auto json = request.toJSON();
-    std::println("Sending request: {}", json);
-    if (auto const retv = client.write_text(std::move(json)); !retv) {
-        print_error(retv.error());
-        return EXIT_FAILURE;
+    if (!openDatabase(client, "test.sqlite")) {
+        std::println("Failed to open database!");
+        if (!createDatabase(client, "test.sqlite")) {
+            std::println("Failed to create database!");
+            return EXIT_FAILURE;
+        }
     }
+
 
     // for (auto const& line : data) {
     //     auto item = bytes(line);

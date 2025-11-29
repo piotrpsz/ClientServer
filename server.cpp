@@ -7,13 +7,15 @@
 #include <iostream>
 #include <print>
 #include <atomic>
-
 #include "request.h"
+#include "server/handler.h"
 
 using namespace bee::crypto;
 
 
 std::atomic_bool running{true};
+
+
 
 
 
@@ -26,13 +28,21 @@ void clientHandler(int const fd) {
 
     std::println("Client connected ({})", server.peerAddress());
 
-    auto const request = server.read_text();
-    if (!request) {
-        print_error(request.error());
-        return;
+    while (true) {
+        auto const request = server.read_text();
+        if (!request) {
+            print_error(request.error());
+            return;
+        }
+        if (auto req = Request::fromJSON(request.value())) {
+            auto response = handleRequest(std::move(req.value())).toJSON();
+            if (auto stat = server.write_text(std::move(response)); !stat) {
+                print_error(stat.error());
+                return;
+            }
+        }
     }
-    auto req = Request::fromJSON(request.value());
-    std::println("Received request: {}", req.value());
+
 
 
     // while (true) {

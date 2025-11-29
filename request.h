@@ -9,16 +9,17 @@
 #include <glaze/api/std/deque.hpp>
 #include "sqlite4cx/shared/types.h"
 
-enum class RequestType {
+enum RequestType {
     Unknown,
     Database,
     Table,
     Query,
 };
 
-enum class RequestSubType {
-    Unknown,
-    CreateOrOpen,
+enum RequestSubType {
+    None,
+    Open,
+    Create,
     Drop,
     Close,
     Insert,
@@ -37,7 +38,8 @@ inline std::string str(RequestType const& type) noexcept {
 }
 inline std::string str(RequestSubType const& type) noexcept {
     switch (type) {
-        case RequestSubType::CreateOrOpen: return "CreateOrOpen";
+        case RequestSubType::Open: return "Open";
+        case RequestSubType::Create: return "Create";
         case RequestSubType::Drop: return "Drop";
         case RequestSubType::Close: return "Close";
         case RequestSubType::Insert: return "Insert";
@@ -89,7 +91,8 @@ template<>
 struct std::formatter<Request> : std::formatter<std::string> {
     auto format(Request const& req, std::format_context& ctx) const {
         return formatter<std::string>::format(
-            std::format("Request[ id: {}, type: {}-{}, content: {} ]", req.id, str(req.type), str(req.subType), req.content),
+            std::format("Request[ id: {}, type: {} | {}, content: {} ]",
+                req.id, str(req.type), str(req.subType), req.content),
             ctx);
     }
 };

@@ -19,6 +19,7 @@ FetchContent_MakeAvailable(glaze)
 
 add_executable(Server
         server.cpp server.h
+        server/handler.cpp server/handler.h
         shared/socket/socket.cpp shared/socket/socket.h
         shared/socket/logger.cpp shared/socket/logger.h
         shared/socket/connector.cpp shared/socket/connector.h
@@ -47,8 +48,10 @@ add_executable(Client
         person.h
         request.cpp request.h
         Response.cpp Response.h
-        shared/shared.cpp
-        shared/shared.h
+        shared/pub.cpp
+        shared/pub.h
+        server/handler.cpp
+        server/handler.h
 )
 target_include_directories(Client PUBLIC
         Botan::Botan

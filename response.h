@@ -10,6 +10,7 @@
 struct Response {
     size_t id{};
     int code{};
+    String message{};
     Vector<u8> data{};
 
     [[nodiscard]] String toJSON() const noexcept {
@@ -37,6 +38,7 @@ struct glz::meta<Response> {
     static constexpr auto value = object(
         &T::id,
         &T::code,
+        &T::message,
         &T::data
     );
 };
@@ -44,6 +46,9 @@ struct glz::meta<Response> {
 template<>
 struct std::formatter<Response> : std::formatter<std::string> {
     auto format(Response const& ans, std::format_context& ctx) const {
-        return formatter<std::string>::format(std::format("Request[ id: {}, code: {}, content: {} ]", ans.id, ans.code, ans.data), ctx);
+        return formatter<std::string>::format(
+            std::format("Request[ id: {}, code: {}, message: {}, content: {} ]",
+                ans.id, ans.code, ans.message, ans.data),
+            ctx);
     }
 };
