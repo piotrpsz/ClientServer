@@ -8,6 +8,8 @@
 #include <algorithm>
 
 using namespace bee::crypto;
+namespace rg = std::ranges;
+namespace rv = rg::views;
 
 /********************************************************************
  *                                                                  *
@@ -39,6 +41,17 @@ std::expected<size_t, std::errc> Server::write(std::span<unsigned char> bytes) c
     return std::unexpected(std::errc::bad_message);
 }
 
+std::expected<size_t, std::errc> Server::write_text(std::string&& text) const noexcept {
+    if (not text.empty()) {
+        auto data = text
+            | rv::transform([](auto c) { return static_cast<u8>(c); })
+            | rg::to<Vector<u8>>();
+        if (auto encrypted = crypto.encrypt(data))
+            return writePackage(encrypted.value());
+    }
+    return std::unexpected(std::errc::bad_message);
+}
+
 std::expected<std::vector<unsigned char>,std::errc> Server::read() const noexcept {
     auto const data = readPackage();
     if (not data)
@@ -50,6 +63,19 @@ std::expected<std::vector<unsigned char>,std::errc> Server::read() const noexcep
     return std::unexpected(std::errc::bad_message);
 }
 
+std::expected<std::string,std::errc> Server::read_text() const noexcept {
+    auto const data = readPackage();
+    if (not data)
+        return std::unexpected(data.error());
+
+    if (auto message = data.value(); auto const plain = crypto.decrypt(message)) {
+        auto retv = plain.value()
+            | rv::transform([](auto const c) { return static_cast<char>(c); })
+            | rg::to<String>();
+        return retv;
+    }
+    return std::unexpected(std::errc::bad_message);
+}
 
 /********************************************************************
  *                                                                  *
@@ -81,6 +107,17 @@ std::expected<size_t, std::errc> Client::write(std::span<unsigned char> const by
     return std::unexpected(std::errc::bad_message);
 }
 
+std::expected<size_t, std::errc> Client::write_text(std::string&& text) const noexcept {
+    if (not text.empty()) {
+        auto data = text
+            | rv::transform([](auto c) { return static_cast<u8>(c); })
+            | rg::to<Vector<u8>>();
+        if (auto encrypted = crypto.encrypt(data))
+            return writePackage(encrypted.value());
+    }
+    return std::unexpected(std::errc::bad_message);
+}
+
 [[nodiscard]] std::expected<std::vector<unsigned char>,std::errc> Client::read() const noexcept {
     auto const data = readPackage();
     if (not data)
@@ -93,3 +130,16 @@ std::expected<size_t, std::errc> Client::write(std::span<unsigned char> const by
     return std::unexpected(std::errc::bad_message);
 }
 
+std::expected<std::string,std::errc> Client::read_text() const noexcept {
+    auto const data = readPackage();
+    if (not data)
+        return std::unexpected(data.error());
+
+    if (auto message = data.value(); auto const plain = crypto.decrypt(message)) {
+        auto retv = plain.value()
+            | rv::transform([](auto const c) { return static_cast<char>(c); })
+            | rg::to<String>();
+        return retv;
+    }
+    return std::unexpected(std::errc::bad_message);
+}

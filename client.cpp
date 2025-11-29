@@ -6,6 +6,8 @@
 #include <print>
 #include <string>
 #include <vector>
+
+#include "request.h"
 #include "shared/socket/connector.h"
 #include "shared/socket/logger.h"
 #include "shared/socket/socket.h"
@@ -29,32 +31,48 @@ int main() {
     };
 
     Client client{};
+
     if (auto const retv = client.connect("127.0.0.1", 12345); !retv) {
         print_error(retv.error());
         return EXIT_FAILURE;
     }
     if (!client.init()) {
-        std::println("Failed to initialize socket!");
+        std::println(std::cerr, "Failed to initialize socket!");
         return EXIT_FAILURE;
     }
 
     std::println("Connected to server ({})", client.peerAddress());
 
-    for (auto const& line : data) {
-        auto item = bytes(line);
-        if (auto const retv = client.write(item); !retv) {
-            print_error(retv.error());
-            return EXIT_FAILURE;
-        }
-        std::println("Sent package: {}", line);
+    //===============================================================
+    Request const request {
+        .id = 123,
+        .type = RequestType::Database,
+        .subType = RequestSubType::CreateOrOpen,
+        .content = As<std::vector<u8>>("test.sqlite"s)
+    };
 
-        auto const answer = client.read();
-        if (!answer) {
-            print_error(answer.error());
-            return EXIT_FAILURE;
-        }
-        std::println("Received answer: {}", As<String>(answer.value()));
+    auto json = request.toJSON();
+    std::println("Sending request: {}", json);
+    if (auto const retv = client.write_text(std::move(json)); !retv) {
+        print_error(retv.error());
+        return EXIT_FAILURE;
     }
+
+    // for (auto const& line : data) {
+    //     auto item = bytes(line);
+    //     if (auto const retv = client.write(item); !retv) {
+    //         print_error(retv.error());
+    //         return EXIT_FAILURE;
+    //     }
+    //     std::println("Sent package: {}", line);
+    //
+    //     auto const answer = client.read();
+    //     if (!answer) {
+    //         print_error(answer.error());
+    //         return EXIT_FAILURE;
+    //     }
+    //     std::println("Received answer: {}", As<String>(answer.value()));
+    // }
 
     return EXIT_SUCCESS;
 }

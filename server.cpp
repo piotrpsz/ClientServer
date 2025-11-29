@@ -8,6 +8,8 @@
 #include <print>
 #include <atomic>
 
+#include "request.h"
+
 using namespace bee::crypto;
 
 
@@ -24,21 +26,30 @@ void clientHandler(int const fd) {
 
     std::println("Client connected ({})", server.peerAddress());
 
-    while (true) {
-        auto const request = server.read();
-        if (!request) {
-            print_error(request.error());
-            break;
-        }
-        auto text = As<String>(request.value());
-        std::println("-- Received package: {}", text);
-
-        auto output = As<Vector<u8>>("Witaj: " + text + "!");
-        if (auto const answer = server.write(output); !answer) {
-            print_error(answer.error());
-            break;
-        }
+    auto const request = server.read_text();
+    if (!request) {
+        print_error(request.error());
+        return;
     }
+    auto req = Request::fromJSON(request.value());
+    std::println("Received request: {}", req.value());
+
+
+    // while (true) {
+    //     auto const request = server.read();
+    //     if (!request) {
+    //         print_error(request.error());
+    //         break;
+    //     }
+    //     auto text = As<String>(request.value());
+    //     std::println("-- Received package: {}", text);
+    //
+    //     auto output = As<Vector<u8>>("Witaj: " + text + "!");
+    //     if (auto const answer = server.write(output); !answer) {
+    //         print_error(answer.error());
+    //         break;
+    //     }
+    // }
     std::println("Client disconnected ({})", server.peerAddress());
 }
 
