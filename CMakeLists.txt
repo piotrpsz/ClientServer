@@ -20,11 +20,11 @@ FetchContent_MakeAvailable(glaze)
 add_executable(Server
         server.cpp server.h
         server/handler.cpp server/handler.h
-        shared/socket/socket.cpp shared/socket/socket.h
-        shared/socket/logger.cpp shared/socket/logger.h
-        shared/socket/connector.cpp shared/socket/connector.h
-        shared/socket/all.hpp
-        shared/crypto/crypto.cpp shared/crypto/crypto.h
+        common/socket/socket.cpp common/socket/socket.h
+        common/socket/logger.cpp common/socket/logger.h
+        common/socket/connector.cpp common/socket/connector.h
+        common/socket/all.hpp
+        common/crypto/crypto.cpp common/crypto/crypto.h
         request.cpp request.h
         Response.cpp Response.h
 )
@@ -39,19 +39,20 @@ target_link_libraries(Server PUBLIC
 
 add_executable(Client
         client.cpp client.h
-        shared/socket/socket.cpp shared/socket/socket.h
-        shared/socket/logger.cpp shared/socket/logger.h
-        shared/socket/connector.cpp shared/socket/connector.h
-        shared/socket/all.hpp
-        shared/crypto/crypto.cpp shared/crypto/crypto.h
+        common/socket/socket.cpp common/socket/socket.h
+        common/socket/logger.cpp common/socket/logger.h
+        common/socket/connector.cpp common/socket/connector.h
+        common/socket/all.hpp
+        common/crypto/crypto.cpp common/crypto/crypto.h
         person.cpp
         person.h
         request.cpp request.h
         Response.cpp Response.h
-        shared/pub.cpp
-        shared/pub.h
+        common/pub.cpp
+        common/pub.h
         server/handler.cpp
         server/handler.h
+        common/types.h
 )
 target_include_directories(Client PUBLIC
         Botan::Botan

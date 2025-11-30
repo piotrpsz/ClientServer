@@ -3,7 +3,7 @@
 //
 
 #include "handler.h"
-#include "../shared/pub.h"
+#include "../common/types.h"
 #include "../sqlite4cx/sqlite4cx.hpp"
 #include <ranges>
 #include <algorithm>
@@ -17,7 +17,6 @@ using namespace bee;
 static Response handleDatabaseRequest(Request&& request);
 
 Response handleRequest(Request &&request) {
-    std::println("Received request: {}", request);
     switch (request.type) {
         case RequestType::Database:
             return handleDatabaseRequest(std::move(request));
@@ -29,7 +28,7 @@ Response handleRequest(Request &&request) {
 Response handleDatabaseRequest(Request&& request) {
     switch (request.subType) {
         case Open: {
-            auto const name = pub::str(request.content);
+            auto const name = request.value;
             if (auto home = pub::homeDirectory()) {
                 auto const path = std::format("{}/.beesoft_test", home.value());
 
@@ -45,7 +44,7 @@ Response handleDatabaseRequest(Request&& request) {
             return Response{.id = request.id, .code = -1, .message = "Failed to get home directory"};
         }
         case Create: {
-            auto const name = pub::str(request.content);
+            auto const name = request.value;
             if (auto home = pub::homeDirectory()) {
                 auto const path = std::format("{}/.beesoft_test", home.value());
 

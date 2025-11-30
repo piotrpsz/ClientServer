@@ -3,7 +3,7 @@
 //
 
 #include "request.h"
-#include "shared/socket/connector.h"
+#include "common/socket/connector.h"
 
 /// Wysłanie żądania poprzez konektor.
 /// \param conn Konektor, poprzez który wysyłane jest żądanie.

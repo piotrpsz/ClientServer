@@ -7,12 +7,13 @@
 #include <boost/concept/detail/has_constraints.hpp>
 #include <glaze/glaze.hpp>
 
-#include "shared/socket/connector.h"
+#include "common/socket/connector.h"
 #include "sqlite4cx/shared/types.h"
 
 struct Response {
     size_t id{};
     int code{};
+    int value{};
     String message{};
     Vector<u8> data{};
 
@@ -51,6 +52,7 @@ struct glz::meta<Response> {
     static constexpr auto value = object(
         &T::id,
         &T::code,
+        &T::value,
         &T::message,
         &T::data
     );
@@ -60,8 +62,8 @@ template<>
 struct std::formatter<Response> : std::formatter<std::string> {
     auto format(Response const& ans, std::format_context& ctx) const {
         return formatter<std::string>::format(
-            std::format("Response[ id: {}, code: {}, message: {}, content: {} ]",
-                ans.id, ans.code, ans.message, ans.data),
+            std::format("Response[ id: {}, code: {}, value: {}, message: {}, content: {} ]",
+                ans.id, ans.code, ans.value, ans.message, ans.data),
             ctx);
     }
 };

@@ -56,10 +56,11 @@ inline std::string str(RequestSubType const& type) noexcept {
 
 
 struct Request {
-    size_t id;      // numer identyfikacyjny żądania.
-    RequestType type;
-    RequestSubType subType;
-    Vector<u8> content;
+    size_t id{};      // numer identyfikacyjny żądania.
+    RequestType type{};
+    RequestSubType subType{};
+    String value{};
+    Vector<u8> content{};
 
     [[nodiscard]] Option<String> toJSON() const noexcept {
         String buffer{};
@@ -90,6 +91,7 @@ struct glz::meta<Request> {
         &T::id,
         &T::type,
         &T::subType,
+        &T::value,
         &T::content
     );
 };
@@ -98,8 +100,8 @@ template<>
 struct std::formatter<Request> : std::formatter<std::string> {
     auto format(Request const& req, std::format_context& ctx) const {
         return formatter<std::string>::format(
-            std::format("Request[ id: {}, type: {} | {}, content: {} ]",
-                req.id, str(req.type), str(req.subType), req.content),
+            std::format("Request[ id: {}, type: {} | {}, value: {}, content: {} ]",
+                req.id, str(req.type), str(req.subType), req.value, req.content),
             ctx);
     }
 };

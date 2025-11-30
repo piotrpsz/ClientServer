@@ -9,9 +9,9 @@
 
 #include "request.h"
 #include "response.h"
-#include "shared/socket/connector.h"
-#include "shared/socket/logger.h"
-#include "shared/socket/socket.h"
+#include "common/socket/connector.h"
+#include "common/socket/logger.h"
+#include "common/socket/socket.h"
 
 using namespace std::string_literals;
 using namespace bee::crypto;
@@ -25,7 +25,7 @@ bool openDatabase(Client const& client, String const& name) noexcept {
         .id = 123,
         .type = RequestType::Database,
         .subType = RequestSubType::Open,
-        .content = As<std::vector<u8>>(name)
+        .value = name
     };
 
     if (auto answer = request.write(client)) {
@@ -41,7 +41,7 @@ bool createDatabase(Client const& client, String const& name) noexcept {
         .id = 123,
         .type = RequestType::Database,
         .subType = RequestSubType::Create,
-        .content = As<std::vector<u8>>(name)
+        .value = name,
     };
 
     if (auto answer = request.write(client)) {

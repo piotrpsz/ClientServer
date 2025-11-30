@@ -3,7 +3,7 @@
 //
 
 #include "server.h"
-#include "shared/socket/all.hpp"
+#include "common/socket/all.hpp"
 #include <iostream>
 #include <print>
 #include <atomic>
@@ -23,38 +23,21 @@ void clientHandler(int const fd) {
         return;
     }
 
-    std::println("Client connected ({})", server.peerAddress());
+    std::println("------- Client connected: {} -------", server.peerAddress());
 
     while (true) {
         auto request = Request::read(server);
         if (!request) {
             print_error(request.error());
-            return;
+            break;
         }
         auto response = handleRequest(std::move(request.value()));
         if (auto const err = response.write(server)) {
             print_error(err.value());
-            return;
+            break;
         }
     }
 
-
-
-    // while (true) {
-    //     auto const request = server.read();
-    //     if (!request) {
-    //         print_error(request.error());
-    //         break;
-    //     }
-    //     auto text = As<String>(request.value());
-    //     std::println("-- Received package: {}", text);
-    //
-    //     auto output = As<Vector<u8>>("Witaj: " + text + "!");
-    //     if (auto const answer = server.write(output); !answer) {
-    //         print_error(answer.error());
-    //         break;
-    //     }
-    // }
     std::println("Client disconnected ({})", server.peerAddress());
 }
 
