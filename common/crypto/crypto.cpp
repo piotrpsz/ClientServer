@@ -9,12 +9,6 @@ using namespace std::string_literals;
 namespace bee::crypto {
     Botan::System_RNG rng;
 
-    // Vector<u8> Crypto::RandomBytes(size_t const nbytes) noexcept {
-    //     Vector<u8> data;
-    //     rng.random_vec(data, nbytes);
-    //     return data;
-    // }
-
     SecVector<u8> Crypto::RandomBytes(size_t const nbytes) noexcept {
         return rng.random_vec<SecVector<u8>>(nbytes);
     }

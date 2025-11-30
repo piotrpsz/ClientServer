@@ -3,6 +3,8 @@
 //
 
 #include "person.h"
+#include <iostream>
+#include "shared4cx/shared.h"
 #include "sqlite4cx/sqlite4cx.hpp"
 
 namespace bee {

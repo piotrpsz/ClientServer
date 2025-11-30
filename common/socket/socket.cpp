@@ -2,19 +2,27 @@
 // Created by Piotr Pszczółkowski on 25/11/2025.
 //
 
+/*------- include files:
+-------------------------------------------------------------------*/
 #include "socket.h"
 #include "logger.h"
 #include <cerrno>
-#include <print>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <netdb.h>
 #include <format>
+#include <print>
+
+using namespace bee;
 
 Socket::Socket() {
     if (auto const fd = socket(AF_INET, SOCK_STREAM, 0); fd != INVALID_SOCKET) {
-        auto const ok = set(fd, SO_REUSEADDR, 1) && set(fd, SO_KEEPALIVE, 1) && set(fd, SO_NOSIGPIPE, 1);
-        ok ? fd_ = fd : ::close(fd);
+        fd_ = fd;
+        // auto const ok = set(fd, SO_REUSEADDR, 1)
+        //     && set(fd, SO_KEEPALIVE, 1)
+        //     && set(fd, SO_NOSIGPIPE, 1)
+        //     && set(fd, SO_REUSEPORT, 1);
+        // ok ? fd_ = fd : ::close(fd);
     }
 }
 
@@ -29,7 +37,7 @@ bool Socket::destroy() noexcept {
     return {};
 }
 
-std::expected<Unit,std::errc> Socket::connect(std::string const& address, int const port) const noexcept {
+Option<std::errc> Socket::connect(std::string const& address, int const port) const noexcept {
     if (auto const host = gethostbyname(address.c_str())) {
         sockaddr_in dest{
             .sin_family = AF_INET,
@@ -37,12 +45,12 @@ std::expected<Unit,std::errc> Socket::connect(std::string const& address, int co
             .sin_addr {.s_addr = *reinterpret_cast<unsigned *>(host->h_addr_list[0])}
         };
         if (::connect(fd_, reinterpret_cast<sockaddr *>(&dest), sizeof(dest)) == 0)
-            return Success;
+            return {};
     }
-    return std::unexpected(std::errc{errno});
+    return std::errc{errno};
 }
 
-std::expected<Unit, std::errc> Socket::bind(int port) const noexcept {
+Option<std::errc> Socket::bind(int port) const noexcept {
     sockaddr_in const destination {
         .sin_family = AF_INET,
         .sin_port = htons(port),
@@ -51,23 +59,25 @@ std::expected<Unit, std::errc> Socket::bind(int port) const noexcept {
     auto const addr = reinterpret_cast<struct sockaddr const*>(&destination);
 
     if (::bind(fd_, addr, sizeof(destination)) == 0)
-        return Success;
+        return {};
 
-    return std::unexpected(std::errc{errno});
+    return std::errc{errno};
 }
 
-std::expected<Unit,std::errc> Socket::listen(int const backlog) const noexcept {
-    if (::listen(fd_, backlog) == 0)
-        return Success;
+Option<std::errc> Socket::listen(int const backlog) const noexcept {
+    if (::listen(fd_, 5) == 0)
+        return {};
 
-    return std::unexpected(std::errc{errno});
+    return std::errc{errno};
 }
 
-std::expected<int,std::errc> Socket::accept() const noexcept {
-    if (auto const fd = ::accept(fd_, nullptr, nullptr); fd != INVALID_SOCKET)
+Result<int,std::errc> Socket::accept() const noexcept {
+    auto const fd = ::accept(fd_, nullptr, nullptr);
+    if (fd != INVALID_SOCKET)
         return fd;
-
-    return std::unexpected(std::errc{errno});
+    std::println("{}", fd);
+    print_error(std::errc{errno});
+    return Failure(std::errc{errno});
 }
 
 std::string Socket::hostAddress() const noexcept {
@@ -96,7 +106,7 @@ std::string Socket::peerAddress() const noexcept {
  *                                                                  *
  ********************************************************************/
 
-std::expected<size_t, std::errc> Socket::writeBytes(void const* const buffer, size_t const size) const noexcept {
+Result<size_t, std::errc> Socket::writeBytes(void const* const buffer, size_t const size) const noexcept {
     auto nleft = size;
     auto ptr = static_cast<char const*>(buffer);
 
@@ -106,7 +116,7 @@ std::expected<size_t, std::errc> Socket::writeBytes(void const* const buffer, si
             if (errno == EINTR) {
                 nwritten = 0;
             } else {
-                return std::unexpected(std::errc{errno});
+                return Failure(std::errc{errno});
             }
         }
         nleft -= nwritten;
@@ -115,7 +125,7 @@ std::expected<size_t, std::errc> Socket::writeBytes(void const* const buffer, si
     return size - nleft;
 }
 
-std::expected<size_t, std::errc> Socket::writePackage(std::span<unsigned char> const bytes) const noexcept {
+Result<size_t, std::errc> Socket::writePackage(std::span<unsigned char> const bytes) const noexcept {
     size_t const size = bytes.size();
     if (auto const retv = writeBytes(&size, sizeof(size)); !retv)
         return retv;
@@ -129,7 +139,7 @@ std::expected<size_t, std::errc> Socket::writePackage(std::span<unsigned char> c
  *                                                                  *
  ********************************************************************/
 
-std::expected<size_t, std::errc> Socket::readBytes(void* const buffer, size_t const size) const noexcept {
+Result<size_t, std::errc> Socket::readBytes(void* const buffer, size_t const size) const noexcept {
     auto nleft = size;
     auto ptr = static_cast<char*>(buffer);
 
@@ -139,7 +149,7 @@ std::expected<size_t, std::errc> Socket::readBytes(void* const buffer, size_t co
             if (errno == EINTR) {
                 nread = 0;
             } else {
-                return std::unexpected(std::errc{errno});
+                return Failure(std::errc{errno});
             }
         }
         else if (nread == 0)
@@ -151,20 +161,20 @@ std::expected<size_t, std::errc> Socket::readBytes(void* const buffer, size_t co
     return size - nleft;
 }
 
-std::expected<std::vector<unsigned char>,std::errc> Socket::readPackage() const noexcept {
+Result<std::vector<unsigned char>,std::errc> Socket::readPackage() const noexcept {
     size_t nbytes{};
     auto retv = readBytes(&nbytes, sizeof(nbytes));
     if (not retv)
-        return std::unexpected(retv.error());
+        return Failure(retv.error());
     if (retv.value() == 0)
-        return std::unexpected(std::errc::broken_pipe);
+        return Failure(std::errc::broken_pipe);
 
     std::vector<unsigned char> bytes(nbytes);
     retv = readBytes(bytes.data(), nbytes);
     if (not retv)
-        return std::unexpected(retv.error());
+        return Failure(retv.error());
     if (retv.value() == 0)
-        return std::unexpected(std::errc::broken_pipe);
+        return Failure(std::errc::broken_pipe);
 
     return bytes;
 }

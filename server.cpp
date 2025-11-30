@@ -18,6 +18,7 @@ std::atomic_bool running{true};
 
 void clientHandler(int const fd) {
     Server server{fd};
+    std::println("server init");
     if (!server.init()) {
         std::println(std::cerr, "Failed to initialize server socket!");
         return;
@@ -44,14 +45,15 @@ void clientHandler(int const fd) {
 int main() {
     Server const server{};
 
-    if (auto const retv = server.run(12345); !retv) {
-        print_error(retv.error());
+    if (auto const err = server.run(123456)) {
+        print_error(err.value());
         exit(EXIT_FAILURE);
     }
 
     std::println("Server waiting for connection ({})", server.hostAddress());
 
     while (running) {
+        std::println("Waiting for connection...");
         if (auto const fd = server.accept()) {
             clientHandler(fd.value());
         }

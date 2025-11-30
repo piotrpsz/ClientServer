@@ -16,6 +16,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glaze)
 
+add_subdirectory(shared4cx)
 
 add_executable(Server
         server.cpp server.h
@@ -35,6 +36,7 @@ target_link_libraries(Server PUBLIC
         Botan::Botan
         sqlite4cx
         glaze::glaze
+        shared4cx
 )
 
 add_executable(Client
@@ -48,11 +50,8 @@ add_executable(Client
         person.h
         request.cpp request.h
         Response.cpp Response.h
-        common/pub.cpp
-        common/pub.h
         server/handler.cpp
         server/handler.h
-        common/types.h
 )
 target_include_directories(Client PUBLIC
         Botan::Botan
@@ -61,4 +60,5 @@ target_link_libraries(Client PUBLIC
         Botan::Botan
         sqlite4cx
         glaze::glaze
+        shared4cx
 )

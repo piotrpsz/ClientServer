@@ -65,10 +65,12 @@ int main() {
 
     Client client{};
 
-    if (auto const retv = client.connect("127.0.0.1", 12345); !retv) {
-        print_error(retv.error());
+    std::println("Connecting...");
+    if (auto const retv = client.connect("127.0.0.1" /*"192.168.50.210"*/, 123456)) {
+        print_error(retv.value());
         return EXIT_FAILURE;
     }
+    std::println("socket init.");
     if (!client.init()) {
         std::println(std::cerr, "Failed to initialize socket!");
         return EXIT_FAILURE;

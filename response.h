@@ -4,11 +4,12 @@
 
 #pragma once
 #include <iostream>
-#include <boost/concept/detail/has_constraints.hpp>
 #include <glaze/glaze.hpp>
 
 #include "common/socket/connector.h"
-#include "sqlite4cx/shared/types.h"
+#include "shared4cx/types.h"
+
+using namespace bee;
 
 struct Response {
     size_t id{};

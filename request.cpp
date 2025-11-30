@@ -5,6 +5,8 @@
 #include "request.h"
 #include "common/socket/connector.h"
 
+using namespace bee;
+
 /// Wysłanie żądania poprzez konektor.
 /// \param conn Konektor, poprzez który wysyłane jest żądanie.
 /// \return Albo odpowiedź na żądanie lub błąd errc (jeśli coś nie wyszło).

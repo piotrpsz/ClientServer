@@ -46,8 +46,6 @@
 #include <ranges>
 #include <boost/exception/exception.hpp>
 
-#include "../socket/logger.h"
-
 namespace bee::crypto {
     extern Botan::System_RNG rng;
 
@@ -72,15 +70,6 @@ namespace bee::crypto {
 
     template<typename Out>
     Out As(auto const& data) {
-        // namespace rv = std::ranges::views;
-        // auto out = data
-        //     | rv::transform([] (auto const c) { return static_cast<u8>(c); })
-        //     | std::ranges::to<Out>();
-
-        // Out out;
-        // out.reserve(data.size());
-        // std::copy_n(data.begin(), data.size(), std::back_inserter(out));
-
         Out out;
         out.resize(data.size());
         memcpy(out.data(), data.data(), data.size());
@@ -117,6 +106,7 @@ namespace bee::crypto {
 
         /// Zaszyfrowanie komunikatu.
         [[nodiscard]] Option<SecVector<u8>> encrypt(Span<const u8> const plain_message) const noexcept {
+            // std::println("Encrypting message...");
             if (auto const encrypted_message = encryptAES(plain_message)) {
                 auto message = encrypted_message.value();
                 return sign(message);
@@ -126,6 +116,7 @@ namespace bee::crypto {
 
         /// Odszyfrowanie komunikatu.
         [[nodiscard]] Option<SecVector<u8>> decrypt(Span<u8> const signed_message) const noexcept {
+            // std::println("Decrypting message...");
             try {
                 if (auto const message = verify(signed_message))
                     return decryptAES(*message);

@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include "sqlite4cx/shared/types.h"
-#include "sqlite4cx/shared/datime.h"
+#include "shared4cx/types.h"
+#include "shared4cx/datime.h"
 #include "sqlite4cx/engine/database.h"
 #include <format>
 

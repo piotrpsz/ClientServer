@@ -3,7 +3,8 @@
 //
 
 #include "handler.h"
-#include "../common/types.h"
+#include "../shared4cx/types.h"
+#include "../shared4cx/shared.h"
 #include "../sqlite4cx/sqlite4cx.hpp"
 #include <ranges>
 #include <algorithm>
@@ -29,11 +30,11 @@ Response handleDatabaseRequest(Request&& request) {
     switch (request.subType) {
         case Open: {
             auto const name = request.value;
-            if (auto home = pub::homeDirectory()) {
+            if (auto home = homeDirectory()) {
                 auto const path = std::format("{}/.beesoft_test", home.value());
 
-                if (auto&& [code, message] = pub::createDirectory(path); code)
-                    return Response{.id = request.id, .code = code, .message = message};
+                if (auto const err = createDirectory(path))
+                    return Response{.id = request.id, .code = err->code, .message = err->message};
 
                 Database::self().sqlite(std::format("{}/{}", path, name));
                 auto const stat = Database::self().open();
@@ -45,11 +46,11 @@ Response handleDatabaseRequest(Request&& request) {
         }
         case Create: {
             auto const name = request.value;
-            if (auto home = pub::homeDirectory()) {
+            if (auto home = homeDirectory()) {
                 auto const path = std::format("{}/.beesoft_test", home.value());
 
-                if (auto&& [code, message] = pub::createDirectory(path); code)
-                    return Response{.id = request.id, .code = code, .message = message};
+                if (auto const err = createDirectory(path))
+                    return Response{.id = request.id, .code = err->code, .message = err->message};
 
                 Database::self().sqlite(std::format("{}/{}", path, name));
                 auto const stat = Database::self().create({});

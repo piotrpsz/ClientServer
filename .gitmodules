@@ -1,3 +1,6 @@
 [submodule "sqlite4cx"]
 	path = sqlite4cx
 	url = https://github.com/piotrpsz/sqlite4cx.git
+[submodule "shared4cx"]
+	path = shared4cx
+	url = https://github.com/piotrpsz/shared4cx.git
