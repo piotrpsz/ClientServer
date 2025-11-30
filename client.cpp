@@ -20,57 +20,36 @@ std::vector<unsigned char> bytes(std::string_view const text) {
     return {text.begin(), text.end()};
 }
 
-bool openDatabase(Client const& client, String name) noexcept {
-    auto request = Request {
+bool openDatabase(Client const& client, String const& name) noexcept {
+    auto const request = Request {
         .id = 123,
         .type = RequestType::Database,
         .subType = RequestSubType::Open,
-        .content = As<std::vector<u8>>("test.sqlite"s)
+        .content = As<std::vector<u8>>(name)
     };
 
-    std::println("Sending request: {}", request);
-    if (auto const retv = client.write(request.toJSON()); !retv) {
-        print_error(retv.error());
-        exit(EXIT_FAILURE);
-    }
-
-    auto const answer = client.read();
-    if (!answer) {
+    if (auto answer = request.write(client)) {
+        return answer.value().code == 0;
+    } else {
         print_error(answer.error());
-        exit(EXIT_FAILURE);
+        return {};
     }
-    auto response = Response::fromJSON(answer.value());
-    if (response) {
-        std::println("Received response: {}", response.value());
-        return response->code == 0;
-    }
-    exit(EXIT_FAILURE);
 }
 
-bool createDatabase(Client const& client, String name) noexcept {
-    auto request = Request {
+bool createDatabase(Client const& client, String const& name) noexcept {
+    auto const request = Request {
         .id = 123,
         .type = RequestType::Database,
         .subType = RequestSubType::Create,
-        .content = As<std::vector<u8>>("test.sqlite"s)
+        .content = As<std::vector<u8>>(name)
     };
 
-    std::println("Sending request: {}", request);
-    if (auto const retv = client.write(request.toJSON()); !retv) {
-        print_error(retv.error());
-        exit(EXIT_FAILURE);
-    }
-
-    auto const answer = client.read();
-    if (!answer) {
+    if (auto answer = request.write(client)) {
+        return answer.value().code == 0;
+    } else {
         print_error(answer.error());
-        exit(EXIT_FAILURE);
+        return {};
     }
-    if (auto response = Response::fromJSON(answer.value())) {
-        std::println("Received response: {}", response.value());
-        return response->code == 0;
-    }
-    exit(EXIT_FAILURE);
 }
 
 int main() {
@@ -99,9 +78,7 @@ int main() {
 
     //===============================================================
     if (!openDatabase(client, "test.sqlite")) {
-        std::println("Failed to open database!");
         if (!createDatabase(client, "test.sqlite")) {
-            std::println("Failed to create database!");
             return EXIT_FAILURE;
         }
     }

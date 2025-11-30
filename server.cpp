@@ -26,17 +26,15 @@ void clientHandler(int const fd) {
     std::println("Client connected ({})", server.peerAddress());
 
     while (true) {
-        auto const request = server.read();
+        auto request = Request::read(server);
         if (!request) {
             print_error(request.error());
             return;
         }
-        if (auto req = Request::fromJSON(request.value())) {
-            auto response = handleRequest(std::move(req.value())).toJSON();
-            if (auto stat = server.write(std::move(response)); !stat) {
-                print_error(stat.error());
-                return;
-            }
+        auto response = handleRequest(std::move(request.value()));
+        if (auto const err = response.write(server)) {
+            print_error(err.value());
+            return;
         }
     }
 

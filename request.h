@@ -7,7 +7,11 @@
 #include <iostream>
 #include <glaze/glaze.hpp>
 #include <glaze/api/std/deque.hpp>
+
+#include "response.h"
 #include "sqlite4cx/shared/types.h"
+
+class Connector;
 
 enum RequestType {
     Unknown,
@@ -30,22 +34,22 @@ enum RequestSubType {
 
 inline std::string str(RequestType const& type) noexcept {
     switch (type) {
-        case RequestType::Database: return "Database";
-        case RequestType::Table: return "Table";
-        case RequestType::Query: return "Query";
+        case Database: return "Database";
+        case Table: return "Table";
+        case Query: return "Query";
         default: return "Unknown";
     }
 }
 inline std::string str(RequestSubType const& type) noexcept {
     switch (type) {
-        case RequestSubType::Open: return "Open";
-        case RequestSubType::Create: return "Create";
-        case RequestSubType::Drop: return "Drop";
-        case RequestSubType::Close: return "Close";
-        case RequestSubType::Insert: return "Insert";
-        case RequestSubType::Select: return "Select";
-        case RequestSubType::Update: return "Update";
-        case RequestSubType::Delete: return "Delete";
+        case Open: return "Open";
+        case Create: return "Create";
+        case Drop: return "Drop";
+        case Close: return "Close";
+        case Insert: return "Insert";
+        case Select: return "Select";
+        case Update: return "Update";
+        case Delete: return "Delete";
         default: return "Unknown";
     }
 }
@@ -57,16 +61,16 @@ struct Request {
     RequestSubType subType;
     Vector<u8> content;
 
-    [[nodiscard]] String toJSON() const noexcept {
+    [[nodiscard]] Option<String> toJSON() const noexcept {
         String buffer{};
         if (auto const ec = glz::write_json(*this, buffer)) {
             std::println(std::cerr, "Error: {}", format_error(ec.ec));
-            return buffer;
+            return {};
         }
         return buffer;
     }
 
-    static std::optional<Request> fromJSON(String const& json) noexcept {
+    static Option<Request> fromJSON(String const& json) noexcept {
         Request request{};
         if (auto const ec = glz::read_json(request, json)) {
             std::println(std::cerr, "Error: {}", format_error(ec.ec));
@@ -74,6 +78,9 @@ struct Request {
         }
         return request;
     }
+
+    [[nodiscard]] Result<Response,std::errc> write(Connector const& conn) const noexcept;
+    static Result<Request,std::errc> read(Connector const& conn) noexcept;
 };
 
 template<>

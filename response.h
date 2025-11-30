@@ -4,7 +4,10 @@
 
 #pragma once
 #include <iostream>
+#include <boost/concept/detail/has_constraints.hpp>
 #include <glaze/glaze.hpp>
+
+#include "shared/socket/connector.h"
 #include "sqlite4cx/shared/types.h"
 
 struct Response {
@@ -13,22 +16,32 @@ struct Response {
     String message{};
     Vector<u8> data{};
 
-    [[nodiscard]] String toJSON() const noexcept {
+    [[nodiscard]] Option<String> toJSON() const noexcept {
         String buffer{};
         if (auto const ec = glz::write_json(*this, buffer)) {
             std::println(std::cerr, "Error: {}", format_error(ec.ec));
-            return buffer;
+            return {};
         }
         return buffer;
     }
 
-    static std::optional<Response> fromJSON(String const& json) noexcept {
+    static Option<Response> fromJSON(String const& json) noexcept {
         Response request{};
         if (auto const ec = glz::read_json(request, json)) {
             std::println(std::cerr, "Error: {}", format_error(ec.ec));
             return {};
         }
         return request;
+    }
+
+    [[nodiscard]] Option<std::errc> write(Connector const& conn) const noexcept {
+        if (auto json = toJSON()) {
+            if (auto const stat = conn.write(std::move(json.value())); not stat)
+                return stat.error();
+            return {};
+        }
+
+        return std::errc::bad_message;
     }
 };
 
@@ -47,7 +60,7 @@ template<>
 struct std::formatter<Response> : std::formatter<std::string> {
     auto format(Response const& ans, std::format_context& ctx) const {
         return formatter<std::string>::format(
-            std::format("Request[ id: {}, code: {}, message: {}, content: {} ]",
+            std::format("Response[ id: {}, code: {}, message: {}, content: {} ]",
                 ans.id, ans.code, ans.message, ans.data),
             ctx);
     }
