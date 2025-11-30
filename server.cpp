@@ -16,9 +16,6 @@ using namespace bee::crypto;
 std::atomic_bool running{true};
 
 
-
-
-
 void clientHandler(int const fd) {
     Server server{fd};
     if (!server.init()) {
@@ -29,14 +26,14 @@ void clientHandler(int const fd) {
     std::println("Client connected ({})", server.peerAddress());
 
     while (true) {
-        auto const request = server.read_text();
+        auto const request = server.read();
         if (!request) {
             print_error(request.error());
             return;
         }
         if (auto req = Request::fromJSON(request.value())) {
             auto response = handleRequest(std::move(req.value())).toJSON();
-            if (auto stat = server.write_text(std::move(response)); !stat) {
+            if (auto stat = server.write(std::move(response)); !stat) {
                 print_error(stat.error());
                 return;
             }

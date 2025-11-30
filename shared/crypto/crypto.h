@@ -28,6 +28,7 @@
 /*------- include files:
 -------------------------------------------------------------------*/
 #include <expected>
+#include <iostream>
 #include <botan/system_rng.h>
 #include <botan/secmem.h>   // secure_vector
 #include <botan/hex.h>      // hex_encode
@@ -43,6 +44,9 @@
 #include <botan/base64.h>
 #include <botan/x509_key.h>
 #include <ranges>
+#include <boost/exception/exception.hpp>
+
+#include "../socket/logger.h"
 
 namespace bee::crypto {
     extern Botan::System_RNG rng;
@@ -56,6 +60,8 @@ namespace bee::crypto {
     template<typename T> using Vector = std::vector<T>;
     template<typename T> using SecVector = Botan::secure_vector<T>;
     template<typename T> using Option = std::optional<T>;
+    template<typename T, typename E> using Result = std::expected<T, E>;
+    template<typename T> using Failure = std::unexpected<T>;
 
     inline SecVector<u8> As(Span<const u8> const data) noexcept {
         SecVector<u8> buffer{};
@@ -120,8 +126,13 @@ namespace bee::crypto {
 
         /// Odszyfrowanie komunikatu.
         [[nodiscard]] Option<SecVector<u8>> decrypt(Span<u8> const signed_message) const noexcept {
-            if (auto const message = verify(signed_message))
-                return decryptAES(*message);
+            try {
+                if (auto const message = verify(signed_message))
+                    return decryptAES(*message);
+            }
+            catch (Botan::Exception const&e) {
+                std::println(std::cerr, "Error: {}", e.what());
+            }
             return {};
         }
 

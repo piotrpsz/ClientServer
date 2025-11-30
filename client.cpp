@@ -29,22 +29,22 @@ bool openDatabase(Client const& client, String name) noexcept {
     };
 
     std::println("Sending request: {}", request);
-    if (auto const retv = client.write_text(request.toJSON()); !retv) {
+    if (auto const retv = client.write(request.toJSON()); !retv) {
         print_error(retv.error());
-        return {};
+        exit(EXIT_FAILURE);
     }
 
-    auto const answer = client.read_text();
+    auto const answer = client.read();
     if (!answer) {
         print_error(answer.error());
-        return {};
+        exit(EXIT_FAILURE);
     }
     auto response = Response::fromJSON(answer.value());
     if (response) {
         std::println("Received response: {}", response.value());
         return response->code == 0;
     }
-    return {};
+    exit(EXIT_FAILURE);
 }
 
 bool createDatabase(Client const& client, String name) noexcept {
@@ -56,21 +56,21 @@ bool createDatabase(Client const& client, String name) noexcept {
     };
 
     std::println("Sending request: {}", request);
-    if (auto const retv = client.write_text(request.toJSON()); !retv) {
+    if (auto const retv = client.write(request.toJSON()); !retv) {
         print_error(retv.error());
-        return {};
+        exit(EXIT_FAILURE);
     }
 
-    auto const answer = client.read_text();
+    auto const answer = client.read();
     if (!answer) {
         print_error(answer.error());
-        return {};
+        exit(EXIT_FAILURE);
     }
     if (auto response = Response::fromJSON(answer.value())) {
         std::println("Received response: {}", response.value());
         return response->code == 0;
     }
-    return {};
+    exit(EXIT_FAILURE);
 }
 
 int main() {
