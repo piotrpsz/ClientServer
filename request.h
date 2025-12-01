@@ -1,15 +1,38 @@
+// MIT License
 //
-// Created by Piotr Pszczolkowski on 28/11/2025.
+// Copyright (c) 2024 Piotr Pszczółkowski
 //
-
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+// Author: Piotr Pszczółkowski
+// Date: 28.11.2025
+// E-mail: piotr@beesoft.pl.
 #pragma once
+
+/*------- include files:
+-------------------------------------------------------------------*/
+#include "shared4cx/types.h"
+#include "response.h"
 #include <format>
 #include <iostream>
 #include <glaze/glaze.hpp>
 #include <glaze/api/std/deque.hpp>
-
-#include "response.h"
-#include "shared4cx/types.h"
 
 namespace bee {
     class Connector;
@@ -20,7 +43,6 @@ namespace bee {
         Table,
         ExecQuery,
     };
-
     enum RequestSubType {
         None,
         Open,
@@ -55,9 +77,10 @@ namespace bee {
         }
     }
 
-
-    struct Request {
-        size_t id{};      // numer identyfikacyjny żądania.
+    /*------- Request struct:
+    -------------------------------------------------------------------*/
+    struct Request final {
+        size_t id{};
         RequestType type{};
         RequestSubType subType{};
         String value{};
@@ -81,14 +104,21 @@ namespace bee {
             return request;
         }
 
+        /// Wysłanie żądania poprzez wskazane gniazdo (używane zazwyczaj po stronie klienta).
+        /// \param conn Obiekt gniazda, poprzez który należy wysłać dane.
+        /// \return Albo odpowiedź na żądanie lub błąd errc.
         [[nodiscard]] Result<Response,std::errc> write(Connector const& conn) const noexcept;
+
+        /// Odczyt żądania ze wskazanego gniazda (używane zazwyczaj po stronie serwera).
+        /// \param conn Obiekt gniazda, z którego należy czytać dane.
+        /// \return Albo obiekt żądania lub błąd errc.
         static Result<Request,std::errc> read(Connector const& conn) noexcept;
     };
 }
 
     template<>
     struct glz::meta<bee::Request> {
-        using T = Request;
+        using T = bee::Request;
         static constexpr auto value = object(
             &T::id,
             &T::type,
@@ -100,7 +130,7 @@ namespace bee {
 
 template<>
 struct std::formatter<bee::Request> : std::formatter<std::string> {
-    auto format(Request const& req, std::format_context& ctx) const {
+    auto format(bee::Request const& req, std::format_context& ctx) const {
         return formatter<std::string>::format(
             std::format("Request[ id: {}, type: {} | {}, value: {}, content: {} ]",
                 req.id, str(req.type), str(req.subType), req.value, req.content),

@@ -1,14 +1,41 @@
+// MIT License
 //
-// Created by Piotr Pszczolkowski on 08/11/2025.
+// Copyright (c) 2024 Piotr Pszczółkowski
 //
-
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+// Author: Piotr Pszczółkowski
+// Date: 28.11.2025
+// E-mail: piotr@beesoft.pl.
 #pragma once
+
+/*------- include files:
+-------------------------------------------------------------------*/
 #include "shared4cx/types.h"
 #include "shared4cx/datime.h"
 #include "sqlite4cx/engine/database.h"
 #include <format>
 
 namespace bee {
+
+    /*------- Person class:
+     -------------------------------------------------------------------*/
     class Person {
         i64 id_{};
         String first_name_{};
@@ -26,6 +53,9 @@ namespace bee {
         Person(Person&&) = default;
         Person& operator=(Person&&) = default;
 
+        /// Konstrukcja obiektu z danych odczytanych z bazy danych.
+        explicit Person(Row&& row) noexcept;
+
         [[nodiscard]] i64 id() const noexcept { return id_; }
         [[nodiscard]] String first_name() const noexcept { return first_name_; }
         [[nodiscard]] String middle_name() const noexcept { return middle_name_ ? middle_name_.value() : "NULL"; }
@@ -33,7 +63,7 @@ namespace bee {
         [[nodiscard]] u32 age() const noexcept { return age_; }
         [[nodiscard]] Datime created() const noexcept { return created_; }
         [[nodiscard]] Datime updated() const noexcept { return updated_; }
-        explicit Person(Row&& row) noexcept;
+
 
         Person& first_name(String text) noexcept {
             first_name_ = std::move(text);

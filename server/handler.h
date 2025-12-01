@@ -6,4 +6,6 @@
 #include "../request.h"
 #include "../response.h"
 
-extern Response handleRequest(Request&& request);
+namespace bee {
+    extern Response handleRequest(Request&& request);
+}

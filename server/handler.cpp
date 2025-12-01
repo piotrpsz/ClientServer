@@ -12,55 +12,55 @@
 
 namespace rg = std::ranges;
 namespace rv = std::ranges::views;
-using namespace bee;
 
+namespace bee {
+    static Response handleDatabaseRequest(Request&& request);
 
-static Response handleDatabaseRequest(Request&& request);
-
-Response handleRequest(Request &&request) {
-    switch (request.type) {
-        case RequestType::Database:
-            return handleDatabaseRequest(std::move(request));
-        default:
-            return Response{.code = -1, .message = "Request type is not supported"};
+    Response handleRequest(Request &&request) {
+        switch (request.type) {
+            case RequestType::Database:
+                return handleDatabaseRequest(std::move(request));
+            default:
+                return Response{.code = -1, .message = "Request type is not supported"};
+        }
     }
-}
 
-Response handleDatabaseRequest(Request&& request) {
-    switch (request.subType) {
-        case Open: {
-            auto const name = request.value;
-            if (auto home = homeDirectory()) {
-                auto const path = std::format("{}/.beesoft_test", home.value());
+    Response handleDatabaseRequest(Request&& request) {
+        switch (request.subType) {
+            case Open: {
+                auto const name = request.value;
+                if (auto home = homeDirectory()) {
+                    auto const path = std::format("{}/.beesoft_test", home.value());
 
-                if (auto const err = createDirectory(path))
-                    return Response{.id = request.id, .code = err->code, .message = err->message};
+                    if (auto const err = createDirectory(path))
+                        return Response{.id = request.id, .code = err->code, .message = err->message};
 
-                Database::self().sqlite(std::format("{}/{}", path, name));
-                auto const stat = Database::self().open();
-                if (stat)
-                    return Response{.id = request.id, .code = 0, .message = "Database opened"};
-                return Response{.id = request.id, .code = stat.error().code, .message = stat.error().message};
+                    Database::self().sqlite(std::format("{}/{}", path, name));
+                    auto const stat = Database::self().open();
+                    if (stat)
+                        return Response{.id = request.id, .code = 0, .message = "Database opened"};
+                    return Response{.id = request.id, .code = stat.error().code, .message = stat.error().message};
+                }
+                return Response{.id = request.id, .code = -1, .message = "Failed to get home directory"};
             }
-            return Response{.id = request.id, .code = -1, .message = "Failed to get home directory"};
-        }
-        case Create: {
-            auto const name = request.value;
-            if (auto home = homeDirectory()) {
-                auto const path = std::format("{}/.beesoft_test", home.value());
+            case Create: {
+                auto const name = request.value;
+                if (auto home = homeDirectory()) {
+                    auto const path = std::format("{}/.beesoft_test", home.value());
 
-                if (auto const err = createDirectory(path))
-                    return Response{.id = request.id, .code = err->code, .message = err->message};
+                    if (auto const err = createDirectory(path))
+                        return Response{.id = request.id, .code = err->code, .message = err->message};
 
-                Database::self().sqlite(std::format("{}/{}", path, name));
-                auto const stat = Database::self().create({});
-                if (stat)
-                    return Response{.id = request.id, .code = 0, .message = "Database created"};
-                return Response{.id = request.id, .code = stat.error().code, .message = stat.error().message};
+                    Database::self().sqlite(std::format("{}/{}", path, name));
+                    auto const stat = Database::self().create({});
+                    if (stat)
+                        return Response{.id = request.id, .code = 0, .message = "Database created"};
+                    return Response{.id = request.id, .code = stat.error().code, .message = stat.error().message};
+                }
+                return Response{.id = request.id, .code = -1, .message = "Failed to get home directory"};
             }
-            return Response{.id = request.id, .code = -1, .message = "Failed to get home directory"};
+            default:
+                return Response{.id = request.id, .code = -1, .message = "Request sub-type is not supported"};
         }
-        default:
-            return Response{.id = request.id, .code = -1, .message = "Request sub-type is not supported"};
     }
 }

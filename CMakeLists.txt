@@ -19,7 +19,7 @@ FetchContent_MakeAvailable(glaze)
 add_subdirectory(shared4cx)
 
 add_executable(Server
-        server.cpp server.h
+        server.cpp
         server/handler.cpp server/handler.h
         common/socket/socket.cpp common/socket/socket.h
         common/socket/logger.cpp common/socket/logger.h
@@ -27,7 +27,7 @@ add_executable(Server
         common/socket/all.hpp
         common/crypto/crypto.cpp common/crypto/crypto.h
         request.cpp request.h
-        Response.cpp Response.h
+        Response.h
 )
 target_include_directories(Server PUBLIC
         Botan::Botan
@@ -40,7 +40,7 @@ target_link_libraries(Server PUBLIC
 )
 
 add_executable(Client
-        client.cpp client.h
+        client.cpp
         common/socket/socket.cpp common/socket/socket.h
         common/socket/logger.cpp common/socket/logger.h
         common/socket/connector.cpp common/socket/connector.h
@@ -49,7 +49,7 @@ add_executable(Client
         person.cpp
         person.h
         request.cpp request.h
-        Response.cpp Response.h
+        Response.h
         server/handler.cpp
         server/handler.h
 )

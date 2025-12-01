@@ -269,7 +269,6 @@ namespace bee::crypto {
             return verifier->check_signature(signature);
         }
 
-        // static Vector<u8> RandomBytes(size_t nbytes) noexcept;
         static SecVector<u8> RandomBytes(size_t nbytes) noexcept;
 
     private:

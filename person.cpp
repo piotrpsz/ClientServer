@@ -1,7 +1,31 @@
+// MIT License
 //
-// Created by Piotr Pszczolkowski on 08/11/2025.
+// Copyright (c) 2024 Piotr Pszczółkowski
 //
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+// Author: Piotr Pszczółkowski
+// Date: 28.11.2025
+// E-mail: piotr@beesoft.pl.
 
+/*------- include files:
+-------------------------------------------------------------------*/
 #include "person.h"
 #include <iostream>
 #include "shared4cx/shared.h"
@@ -35,7 +59,7 @@ namespace bee {
             id_ = retv.value();
             return true;
         }
-        std::println("{}", retv.error());
+        std::println(std::cerr, "{}", retv.error());
         return false;
     }
 
@@ -51,7 +75,7 @@ namespace bee {
         if (retv)
             return true;
 
-        std::println("{}", retv.error());
+        std::println(std::cerr, "{}", retv.error());
         return false;
     }
 
@@ -67,8 +91,7 @@ namespace bee {
     }
 
     Option<Vector<Person>> Person::all() noexcept {
-        Query query("SELECT * FROM person");
-        auto retv = Database::self().select(std::move(query));
+        auto retv = Database::self().select(Query{"SELECT * FROM person"});
         if (!retv) {
             std::println(std::cerr, "{}", retv.error());
             return {};
@@ -91,13 +114,17 @@ namespace bee {
         persons.reserve(retv.value().size());
         for (auto&& row : retv.value())
             persons.emplace_back(std::move(row));
+
+        persons.shrink_to_fit();
         return persons;
     }
 
     bool Person::remove(i64 const id) noexcept {
         auto retval = Database::self().exec("DELETE FROM person WHERE id=?", id);
-        if (retval) return true;
-        std::println("{}", retval.error());
+        if (retval)
+            return true;
+
+        std::println(std::cerr, "{}", retval.error());
         return false;
     }
 
@@ -110,8 +137,10 @@ namespace bee {
 
         Query query(std::format("DELETE FROM person WHERE id IN ({})", ids));
         auto retval = Database::self().exec(std::move(query));
-        if (retval) return true;
-        std::println("{}", retval.error());
+        if (retval)
+            return true;
+
+        std::println(std::cerr, "{}", retval.error());
         return false;
     }
 
