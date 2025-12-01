@@ -116,17 +116,17 @@ namespace bee {
     };
 }
 
-    template<>
-    struct glz::meta<bee::Request> {
-        using T = bee::Request;
-        static constexpr auto value = object(
-            &T::id,
-            &T::type,
-            &T::subType,
-            &T::value,
-            &T::content
-        );
-    };
+template<>
+struct glz::meta<bee::Request> {
+    using T = bee::Request;
+    static constexpr auto value = object(
+        &T::id,
+        &T::type,
+        &T::subType,
+        &T::value,
+        &T::content
+    );
+};
 
 template<>
 struct std::formatter<bee::Request> : std::formatter<std::string> {

@@ -38,11 +38,14 @@ namespace rv = std::ranges::views;
 
 namespace bee {
     static Response handleDatabaseRequest(Request&& request);
+    static Response handleTableRequest(Request&& request);
 
     Response handleRequest(Request &&request) {
         switch (request.type) {
             case Database:
                 return handleDatabaseRequest(std::move(request));
+            case Table:
+                return handleTableRequest(std::move(request));
             default:
                 return Response{.code = -1, .message = "Request type is not supported"};
         }
@@ -56,15 +59,16 @@ namespace bee {
                 auto const name = request.value;
                 if (auto home = homeDirectory()) {
                     auto const path = std::format("{}/.beesoft_test", home.value());
-
                     if (auto const err = createDirectory(path))
                         return Response{.id = request.id, .code = err->code, .message = err->message};
 
                     Database::self().sqlite(std::format("{}/{}", path, name));
-                    auto const stat = Database::self().open();
-                    if (stat)
-                        return Response{.id = request.id, .code = 0, .message = "Database opened"};
-                    return Response{.id = request.id, .code = stat.error().code, .message = stat.error().message};
+
+                    if (auto const stat = Database::self().open())
+                        return Response{.id = request.id, .code = stat->code, .message = stat->message};
+
+                    return Response{.id = request.id, .code = 0, .message = "Database opened"};
+
                 }
                 return Response{.id = request.id, .code = -1, .message = "Failed to get home directory"};
             }
@@ -74,15 +78,14 @@ namespace bee {
                 auto const name = request.value;
                 if (auto home = homeDirectory()) {
                     auto const path = std::format("{}/.beesoft_test", home.value());
-
                     if (auto const err = createDirectory(path))
                         return Response{.id = request.id, .code = err->code, .message = err->message};
 
                     Database::self().sqlite(std::format("{}/{}", path, name));
-                    auto const stat = Database::self().create({});
-                    if (stat)
-                        return Response{.id = request.id, .code = 0, .message = "Database created"};
-                    return Response{.id = request.id, .code = stat.error().code, .message = stat.error().message};
+                    if (auto const stat = Database::self().create({}))
+                        return Response{.id = request.id, .code = stat->code, .message = stat->message};
+
+                    return Response{.id = request.id, .code = 0, .message = "Database created"};
                 }
                 return Response{.id = request.id, .code = -1, .message = "Failed to get home directory"};
             }
@@ -90,4 +93,18 @@ namespace bee {
                 return Response{.id = request.id, .code = -1, .message = "Request sub-type is not supported"};
         }
     }
+
+    Response handleTableRequest(Request&& request) {
+        switch (request.subType) {
+            case Create: {
+                if (auto const name = request.value; not name.empty()) {
+                    auto const stat = Database::self().exec(name);
+                }
+                return Response{.id = request.id, .code = 0, .message = "Table created"};
+            }
+            default:
+                return Response{.id = request.id, .code = -1, .message = "Request type is not supported"};
+        }
+    }
+
 }

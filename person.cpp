@@ -71,15 +71,15 @@ namespace bee {
             , age_
             , id_
         );
-        auto const retv = Database::self().update(std::move(query));
-        if (retv)
-            return true;
+        if (auto const stat = Database::self().update(std::move(query))) {
+            std::println(std::cerr, "{}", *stat);
+            return {};
+        }
 
-        std::println(std::cerr, "{}", retv.error());
-        return false;
+        return true;
     }
 
-    Option<Person> Person::with_id(i64 id) noexcept {
+    Option<Person> Person::with_id(i64 const id) noexcept {
         Query query("SELECT * FROM person WHERE id=?", id);
         if (auto retv = Database::self().select(std::move(query))) {
             for (auto&& row : retv.value()) {
@@ -120,12 +120,12 @@ namespace bee {
     }
 
     bool Person::remove(i64 const id) noexcept {
-        auto retval = Database::self().exec("DELETE FROM person WHERE id=?", id);
-        if (retval)
-            return true;
+        if (auto const stat = Database::self().exec("DELETE FROM person WHERE id=?", id)) {
+            std::println(std::cerr, "{}", *stat);
+            return {};
+        }
 
-        std::println(std::cerr, "{}", retval.error());
-        return false;
+        return true;
     }
 
     bool Person::remove(Vector<i64>&& vec_i64) noexcept {
@@ -136,12 +136,12 @@ namespace bee {
         auto ids = join(vec_str, ',');
 
         Query query(std::format("DELETE FROM person WHERE id IN ({})", ids));
-        auto retval = Database::self().exec(std::move(query));
-        if (retval)
-            return true;
 
-        std::println(std::cerr, "{}", retval.error());
-        return false;
+        if (auto const stat= Database::self().exec(std::move(query))) {
+            std::println(std::cerr, "{}", *stat);
+            return {};
+        }
+        return true;
     }
 
 }

@@ -28,6 +28,7 @@
 -------------------------------------------------------------------*/
 #include "request.h"
 #include "response.h"
+#include "person.h"
 #include "common/socket/connector.h"
 #include "common/socket/logger.h"
 #include "common/socket/socket.h"
@@ -57,11 +58,26 @@ bool openDatabase(Client const& client, String const& name) noexcept {
 
 bool createDatabase(Client const& client, String const& name) noexcept {
     auto const request = Request {
-        .id = 123,
+        .id = 124,
         .type = Database,
         .subType = Create,
         .value = name,
     };
+
+    if (auto answer = request.write(client)) {
+        return answer->code == 0;
+    } else {
+        print_error(answer.error());
+        return {};
+    }
+}
+
+bool createTable(Client const& client, String const& command) noexcept {
+    auto const request = Request {
+        .id = 125,
+        .type = Table,
+        .subType = Create,
+        .value = command};
 
     if (auto answer = request.write(client)) {
         return answer->code == 0;
@@ -98,9 +114,10 @@ int main() {
     std::println("Connected to server ({})", client.peerAddress());
 
     //===============================================================
-    if (!openDatabase(client, "test.sqlite")) {
-        if (!createDatabase(client, "test.sqlite")) {
-            return EXIT_FAILURE;
+    if (not openDatabase(client, "test.sqlite")) {
+        if (not createDatabase(client, "test.sqlite")) {
+            if (not createTable(client, "person"))
+                return EXIT_FAILURE;
         }
     }
 
