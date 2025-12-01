@@ -53,6 +53,7 @@ namespace bee::crypto {
     using i8 = int8_t;
     using String = std::string;
     using StringView = std::string_view;
+    using Errc = std::errc;
     template<typename T, typename K> using Pair = std::pair<T, K>;
     template<typename T> using Span = std::span<T>;
     template<typename T> using Vector = std::vector<T>;
@@ -60,6 +61,8 @@ namespace bee::crypto {
     template<typename T> using Option = std::optional<T>;
     template<typename T, typename E> using Result = std::expected<T, E>;
     template<typename T> using Failure = std::unexpected<T>;
+    template<typename T> using UniquePtr = std::unique_ptr<T>;
+
 
     inline SecVector<u8> As(Span<const u8> const data) noexcept {
         SecVector<u8> buffer{};
@@ -89,8 +92,8 @@ namespace bee::crypto {
         static constexpr size_t AES_KEY_SIZE = 32;
         static constexpr size_t AES_NONCE_SIZE = 12;
 
-        std::unique_ptr<Botan::Private_Key> rsa_private_key_{};
-        std::unique_ptr<Botan::Public_Key> rsa_buddy_public_key_{};
+        UniquePtr<Botan::Private_Key> rsa_private_key_{};
+        UniquePtr<Botan::Public_Key> rsa_buddy_public_key_{};
         Option<SecVector<u8>> aes_key_{};
 
     public:
@@ -106,7 +109,6 @@ namespace bee::crypto {
 
         /// Zaszyfrowanie komunikatu.
         [[nodiscard]] Option<SecVector<u8>> encrypt(Span<const u8> const plain_message) const noexcept {
-            // std::println("Encrypting message...");
             if (auto const encrypted_message = encryptAES(plain_message)) {
                 auto message = encrypted_message.value();
                 return sign(message);
@@ -142,7 +144,7 @@ namespace bee::crypto {
         /// Zwraca publiczny klucz RSA jako BER.
         /// \return Zwraca Result<String, Error>
         [[nodiscard]] String RSAPublicKeyBER() const {
-            std::unique_ptr<Botan::Public_Key> const rsa_public_key = rsa_private_key_->public_key();
+            UniquePtr<Botan::Public_Key> const rsa_public_key = rsa_private_key_->public_key();
             return Botan::base64_encode(Botan::X509::BER_encode(*rsa_public_key));
         }
 
