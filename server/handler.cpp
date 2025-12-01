@@ -36,6 +36,14 @@
 namespace rg = std::ranges;
 namespace rv = std::ranges::views;
 
+/*------- local constants:
+-------------------------------------------------------------------*/
+static constexpr auto NoHomeDirectory = "Failed to get home directory";
+static constexpr auto RequestTypeNotSupported = "Request type is not supported";
+static constexpr auto RequestSubTypeNotSupported = "Request sub-type is not supported";
+static constexpr auto DatabaseOpened = "Database opened";
+static constexpr auto DatabaseCreated = "Database created";
+
 namespace bee {
     static Response handleDatabaseRequest(Request&& request);
     static Response handleTableRequest(Request&& request);
@@ -47,9 +55,15 @@ namespace bee {
             case Table:
                 return handleTableRequest(std::move(request));
             default:
-                return Response{.code = -1, .message = "Request type is not supported"};
+                return Response{.code = -1, .message = RequestTypeNotSupported};
         }
     }
+
+    /****************************************************************
+     *                                                              *
+     *             D A T A B A S E   H A N D L E R                  *
+     *                                                              *
+     ****************************************************************/
 
     Response handleDatabaseRequest(Request&& request) {
         switch (request.subType) {
@@ -67,10 +81,10 @@ namespace bee {
                     if (auto const stat = Database::self().open())
                         return Response{.id = request.id, .code = stat->code, .message = stat->message};
 
-                    return Response{.id = request.id, .code = 0, .message = "Database opened"};
+                    return Response{.id = request.id, .code = 0, .message = DatabaseOpened};
 
                 }
-                return Response{.id = request.id, .code = -1, .message = "Failed to get home directory"};
+                return Response{.id = request.id, .code = -1, .message = NoHomeDirectory};
             }
 
             //------- CREATE ----------------------------------------
@@ -85,14 +99,20 @@ namespace bee {
                     if (auto const stat = Database::self().create({}))
                         return Response{.id = request.id, .code = stat->code, .message = stat->message};
 
-                    return Response{.id = request.id, .code = 0, .message = "Database created"};
+                    return Response{.id = request.id, .code = 0, .message = DatabaseCreated};
                 }
-                return Response{.id = request.id, .code = -1, .message = "Failed to get home directory"};
+                return Response{.id = request.id, .code = -1, .message = NoHomeDirectory};
             }
             default:
-                return Response{.id = request.id, .code = -1, .message = "Request sub-type is not supported"};
+                return Response{.id = request.id, .code = -1, .message = RequestSubTypeNotSupported};
         }
     }
+
+    /****************************************************************
+     *                                                              *
+     *                 T A B L E   H A N D L E R                    *
+     *                                                              *
+     ****************************************************************/
 
     Response handleTableRequest(Request&& request) {
         switch (request.subType) {
@@ -103,7 +123,7 @@ namespace bee {
                 return Response{.id = request.id, .code = 0, .message = "Table created"};
             }
             default:
-                return Response{.id = request.id, .code = -1, .message = "Request type is not supported"};
+                return Response{.id = request.id, .code = -1, .message = RequestSubTypeNotSupported};
         }
     }
 
